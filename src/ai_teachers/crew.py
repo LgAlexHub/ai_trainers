@@ -1,116 +1,133 @@
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from crewai_tools import (
-    DirectoryReadTool,
-    FileReadTool,
-    SerperDevTool,
-    WebsiteSearchTool,
-    ScrapeWebsiteTool,
-    FileWriterTool
-)
-from typing import List
+from crewai_tools import PDFSearchTool, FileReadTool, FileWriterTool
+from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
+from typing import List, Type
+import os
+from pypdf import PdfReader
+import re
 
-# https://docs.crewai.com/concepts/agents#agent-tools
-# https://docs.crewai.com/concepts/tasks#overview-of-a-task
-# https://docs.crewai.com/concepts/knowledge#what-is-knowledge
-# https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
-# Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
-# Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-# process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
+class PDFContentInput(BaseModel):
+    """Input schema for PDFContentTool."""
+    pdf_path: str = Field(..., description="Chemin vers le fichier PDF à analyser")
 
+class PDFContentTool(BaseTool):
+    name: str = "PDF Content Extractor"
+    description: str = "Extrait et traite le contenu textuel d'un fichier PDF pour analyse pédagogique"
+    args_schema: Type[BaseModel] = PDFContentInput
+
+    def _run(self, pdf_path: str) -> str:
+        """Exécute l'extraction du contenu PDF"""
+        try:
+            with open("C:\\Users\\alexl\\Documents\\4_CODE\\7_PYTHON\\crew\\ai_teachers\\src\\ai_teachers\\Référentiel_Activités_Compétences_Evaluation_TP_DWWM.pdf", "rb") as f:
+                pdf = PdfReader(f)
+                text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+                processed_text = re.sub(r"\s+", " ", text).strip()
+                return processed_text
+        except Exception as e:
+            return f"Erreur lors de la lecture du PDF: {str(e)}"
 
 @CrewBase
 class AiTeachers():
-    """AiTeachers crew"""
+    """Crew optimisé pour l'analyse de PDF pédagogiques"""
 
     agents: List[BaseAgent]
     tasks: List[Task]
+
+    # Configuration du modèle
     llm = LLM(
         model='ollama/llama3.2:3b',
-        # model='ollama/llama3.2:3b',
-        base_url='http://127.0.0.1:11434'
+        base_url='http://127.0.0.1:11434',
+        timeout=300,
     )
+    
+    # Chemin du PDF à analyser
+    PDF_PATH = "C:\\Users\\alexl\\Documents\\4_CODE\\7_PYTHON\\crew\\ai_teachers\\src\\ai_teachers\\Référentiel_Activités_Compétences_Evaluation_TP_DWWM.pdf"
 
     @agent
-    def web_retreiver(self) -> Agent:
+    def pdf_analyst(self) -> Agent:
+        """Agent spécialisé dans l'analyse de PDF avec configuration Ollama forcée"""
         return Agent(
-            config=self.agents_config['web_retreiver'],
-            tools=[SerperDevTool()],
-            verbose=True,
-            llm=self.llm
-        )
-
-    @agent
-    def web_scrapper(self) -> Agent:
-        return Agent(
-            config=self.agents_config['web_scrapper'],
+            config=self.agents_config['pdf_analyst'],
             tools=[
-                ScrapeWebsiteTool(
-                    website_url=None,  # Dynamique
-                    bypass_ssl=False,
-                    headers={
-                        "User-Agent": "Mozilla/5.0 (compatible; CrewAI/1.0; +https://crewai.com)"
-                    }
-                ),
-                FileWriterTool(),
+                PDFContentTool(pdf=self.PDF_PATH),
             ],
             verbose=True,
-            llm=self.llm
+            llm=self.llm,
+            max_iter=3,
+            allow_delegation=False
         )
 
     @agent
-    def web_content_writter(self) -> Agent:
+    def content_synthesizer(self) -> Agent:
+        """Agent spécialisé dans la synthèse et structuration"""
         return Agent(
-            config=self.agents_config['web_content_writter'],
-            tools=[],
-            verbose=True,
-            llm=self.llm
-        )
-
-    @agent
-    def file_writter(self) -> Agent:
-        return Agent(
-            config=self.agents_config['file_writter'],
+            config=self.agents_config['content_synthesizer'],
             tools=[FileWriterTool()],
-            llm=self.llm
+            verbose=True,
+            llm=self.llm,
+            max_iter=2,
+            allow_delegation=False
+        )
 
+    @agent
+    def quality_reviewer(self) -> Agent:
+        """Agent pour validation et amélioration du contenu"""
+        return Agent(
+            config=self.agents_config['quality_reviewer'],
+            tools=[FileReadTool(), FileWriterTool()],
+            verbose=True,
+            llm=self.llm,
+            max_iter=2
         )
 
     @task
-    def retreive_content_task(self) -> Task:
+    def pdf_extraction_task(self) -> Task:
+        """Tâche d'extraction ciblée du PDF"""
         return Task(
-            config=self.tasks_config['retreive_content_task'],
+            config=self.tasks_config['pdf_extraction_task'],
+            agent=self.pdf_analyst(),
+            output_file="extracted_content.md"
         )
 
     @task
-    def web_scrap_task(self) -> Task:
+    def content_analysis_task(self) -> Task:
+        """Tâche d'analyse approfondie du contenu"""
         return Task(
-            config=self.tasks_config['web_scrap_task'],
-            context=[self.retreive_content_task()]
+            config=self.tasks_config['content_analysis_task'],
+            agent=self.pdf_analyst(),
+            context=[self.pdf_extraction_task()],
+            output_file="analyzed_content.md"
         )
 
     @task
-    def write_web_content_task(self) -> Task:
+    def synthesis_task(self) -> Task:
+        """Tâche de synthèse finale"""
         return Task(
-            config=self.tasks_config['write_web_content_task'],
-            context=[self.web_scrap_task()]
+            config=self.tasks_config['synthesis_task'],
+            agent=self.content_synthesizer(),
+            context=[self.pdf_extraction_task(), self.content_analysis_task()],
+            output_file="./output/rapport_final.md"
         )
 
     @task
-    def write_file_task(self) -> Task:
+    def quality_check_task(self) -> Task:
+        """Tâche de validation qualité"""
         return Task(
-            config=self.tasks_config['write_file_task'],
-            context=[self.write_web_content_task()]
-
+            config=self.tasks_config['quality_check_task'],
+            agent=self.quality_reviewer(),
+            context=[self.synthesis_task()],
+            output_file="./output/rapport_valide.md"
         )
 
     @crew
     def crew(self) -> Crew:
-        """Creates the AiTeachers crew"""
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
+            memory=True
         )

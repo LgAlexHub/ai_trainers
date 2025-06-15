@@ -1,38 +1,112 @@
-retreive_content_task:
+pdf_extraction_task:
+  name: "Extraction Contenu PDF DWWM"
   description: >
-    Effectuez une recherche approfondie et complete sur le {topic} et liste les listes avec des informations interessantes
+    Procéder à l'extraction complète et méthodique du contenu textuel du référentiel PDF DWWM. 
+    Utiliser l'outil PDFContentTool pour extraire le texte, puis identifier et cataloguer les 
+    sections principales : activités professionnelles, compétences, critères d'évaluation, 
+    modalités de certification. Nettoyer le contenu extrait en supprimant les artifacts de 
+    formatage et structurer l'information de manière hiérarchique pour faciliter l'analyse 
+    ultérieure. Créer une cartographie initiale du document avec métadonnées.
   expected_output: >
-    Liste de 10 URLs au format Markdown :
-      - [Nom du site 1](https://url1.com)
-      - [Nom du site 2](https://url2.com) {topic}
-  agent: web_retreiver
+    Un document markdown structuré contenant :
+    - Le contenu textuel intégral extrait et nettoyé du PDF
+    - Une table des matières détaillée avec identification des sections
+    - La cartographie des activités professionnelles identifiées
+    - L'inventaire des compétences répertoriées par domaine
+    - Les métadonnées du document (nombre de pages, structure, version)
+    - Une première classification thématique du contenu
+    - Les annexes et références extraites
+    Format : markdown avec headers hiérarchiques et listes structurées
+  agent: pdf_analyst
+  output_file: "extracted_content.md"
+  markdown: true
+  async_execution: false
+  human_input: false
 
-web_scrap_task:
+content_analysis_task:
+  name: "Analyse Approfondie Référentiel"
   description: >
-    Scrappe CHAQUE URL de la liste fournie dans context
-    Utilise l'outil ScrapeWebsiteTool pour chaque URL avec une profondeur de 1 lien
-    Utilise l'outil FileWriterTool pour ecrire un fichier dont tu choisira le nom au path suivant
-    C:\Users\alexl\Documents\4_CODE\7_PYTHON\crew\ai_teachers\output
+    Conduire une analyse approfondie et systématique du contenu extrait pour établir une 
+    cartographie complète du référentiel DWWM. Identifier et décrire précisément chaque 
+    activité professionnelle avec ses composantes, analyser les compétences associées en 
+    spécifiant leurs niveaux et prérequis, cataloguer les modalités d'évaluation avec leurs 
+    critères spécifiques. Établir la matrice de correspondance entre activités et compétences, 
+    identifier les progressions pédagogiques logiques et détecter les liens transversaux. 
+    Analyser les exigences de certification et les conditions de validation.
   expected_output: >
-    JSON mappes des sites scrappes avec toutes les informations les plus importante, tu choisiras le format
-  context: [retreive_content_task]
-  agent: web_scrapper
+    Un rapport d'analyse structuré en markdown comprenant :
+    - Cartographie détaillée des 6 activités professionnelles DWWM avec descriptions complètes
+    - Référentiel de compétences organisé par domaines (front-end, back-end, bases de données, etc.)
+    - Matrice de correspondance activités/compétences avec niveaux de maîtrise
+    - Analyse des modalités d'évaluation par compétence (projets, épreuves, soutenances)
+    - Identification des prérequis et progressions pédagogiques recommandées
+    - Synthèse des exigences de certification et conditions de validation
+    - Recommandations pour l'organisation pédagogique du parcours
+    Format : markdown avec tableaux, schémas textuels et classifications détaillées
+  agent: pdf_analyst
+  context: 
+    - pdf_extraction_task
+  output_file: "analyzed_content.md"
+  markdown: true
+  async_execution: false
+  human_input: false
 
-write_web_content_task:
+synthesis_task:
+  name: "Synthèse Référentiel DWWM"
   description: >
-    Ecrit les informations de maniere clair et pertinente dans un fichier
+    Créer une synthèse complète, professionnelle et opérationnelle du référentiel DWWM en 
+    consolidant toutes les analyses précédentes. Structurer l'information de manière logique 
+    et pédagogique pour créer un document de référence exploitable par les formateurs, 
+    apprenants et organismes de formation. Intégrer les recommandations d'organisation 
+    pédagogique, proposer des séquences d'apprentissage cohérentes et fournir des outils 
+    d'aide à la mise en œuvre. Garantir la clarté, l'exhaustivité et l'utilisabilité du 
+    document final avec une présentation professionnelle adaptée aux différents publics.
   expected_output: >
-    Toutes le contenu en accord avec le topic chacun avec une section d information.
-    Fichier markdown formate en markdown sans '```'
-  context: [web_scrap_task]
-  agent: web_content_writter
+    Un rapport de synthèse complet et professionnel comprenant :
+    - Résumé exécutif du référentiel DWWM avec enjeux et objectifs
+    - Présentation structurée des 6 activités professionnelles avec contextes d'exercice
+    - Référentiel détaillé des compétences par domaine avec niveaux taxonomiques
+    - Guide des modalités d'évaluation avec grilles et critères précis
+    - Recommandations pédagogiques : progressions, méthodes, outils
+    - Matrices de correspondance et tableaux de synthèse
+    - Glossaire des termes techniques et acronymes
+    - Annexes pratiques : modèles d'évaluation, check-lists, ressources
+    Format : document markdown professionnel avec navigation, index et références croisées
+  agent: content_synthesizer
+  context:
+    - pdf_extraction_task
+    - content_analysis_task
+  output_file: "./output/rapport_final.md"
+  markdown: true
+  async_execution: false
+  human_input: false
 
-write_file_task:
+quality_check_task:
+  name: "Validation Qualité Référentiel"
   description: >
-    Ecrit le contenu informatif et pedagogique dans un ou plusieurs fichiers
+    Effectuer une validation complète et rigoureuse du rapport final selon les standards 
+    de qualité pédagogique et les exigences de certification professionnelle. Vérifier 
+    la conformité aux référentiels nationaux, contrôler l'exactitude et la cohérence 
+    des informations, valider la pertinence pédagogique des recommandations. Corriger 
+    les erreurs identifiées, optimiser la structure et la présentation, enrichir le 
+    contenu si nécessaire. Certifier la qualité opérationnelle du document et sa 
+    conformité aux besoins des utilisateurs finaux. Produire la version définitive 
+    validée avec recommandations d'utilisation.
   expected_output: >
-    Un ou plusieurs fichiers markdown un par notion regroupable en dossier thematique avec en prefix de nom de fichier report_2025.md
-    Fichier markdown formate en markdown sans '```'
-  context: [write_web_content_task]
-
-  agent: file_writter
+    Un rapport final validé et certifié qualité comprenant :
+    - Document principal corrigé et optimisé avec toutes validations appliquées
+    - Certificat de conformité aux standards pédagogiques et réglementaires
+    - Guide d'utilisation du référentiel pour les différents publics cibles
+    - Recommandations d'implémentation par type d'organisme de formation
+    - Check-list de validation pour les formateurs et responsables pédagogiques  
+    - Synthèse des points clés et bonnes pratiques identifiées
+    - Plan d'amélioration continue et suggestions d'évolution
+    - Version exécutive pour les décideurs et responsables formation
+    Format : ensemble documentaire professionnel prêt pour déploiement opérationnel
+  agent: quality_reviewer
+  context:
+    - synthesis_task
+  output_file: "./output/rapport_valide.md"
+  markdown: true
+  async_execution: false
+  human_input: true

@@ -5,7 +5,10 @@ description = "ai-teachers using crewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
 dependencies = [
-    "crewai[tools]>=0.130.0,<1.0.0"
+    "beautifulsoup4>=4.13.4",
+    "crewai[tools]>=0.130.0,<1.0.0",
+    "ollama>=0.5.1",
+    "requests>=2.32.4",
 ]
 
 [project.scripts]
