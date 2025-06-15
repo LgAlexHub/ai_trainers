@@ -11,7 +11,7 @@ from crewai_tools import (
 )
 from typing import List
 
-# https://docs.crewai.com/concepts/agents#agent-tools    
+# https://docs.crewai.com/concepts/agents#agent-tools
 # https://docs.crewai.com/concepts/tasks#overview-of-a-task
 # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -27,7 +27,8 @@ class AiTeachers():
     agents: List[BaseAgent]
     tasks: List[Task]
     llm = LLM(
-        model='ollama/llama3.2:3b',
+        model='ollama/deepseek-r1:8b',
+        # model='ollama/llama3.2:3b',
         base_url='http://127.0.0.1:11434'
     )
 
@@ -39,93 +40,57 @@ class AiTeachers():
             verbose=True,
             llm=self.llm
         )
-        
+
     @agent
     def web_scrapper(self) -> Agent:
         return Agent(
-            config=self.agents_configs['web_scrapper'],
+            config=self.agents_config['web_scrapper'],
             tools=[ScrapeWebsiteTool()],
             verbose=True,
             llm=self.llm
         )
-        
-    @agent 
-    def web_writter(self) -> Agent:
-        return Agent(
-            config = self.agents_config['web_writter'],
-            tools=[FileWriterTool()]
-        )
-    
+
     @agent
-    def subject_matter_expert(self) -> Agent:
+    def web_content_writter(self) -> Agent:
         return Agent(
-            config=self.agents_config['subject_matter_expert'],
+            config=self.agents_config['web_content_writter'],
+            tools=[],
             verbose=True,
             llm=self.llm
         )
-    
-    @agent
-    def graphist_ux_designer(self) -> Agent:
-        return Agent(
-            config=self.agents_config['graphist_ux_designer'],
-            verbose=True,
-            llm = self.llm
-        )
 
     @agent
-    def insturctionnal_designer(self) -> Agent:
+    def file_writter(self) -> Agent:
         return Agent(
-            config=self.agents_config['insturctionnal_designer'],
-            verbose=True,
-            llm = self.llm
-        )
-
-    @agent
-    def content_writter(self) -> Agent:
-        return Agent(
-            config=self.agents_config['content_writter'],
-            verbose=True,
-            llm = self.llm
-        )
-
-    @task
-    def fetch_the_internet_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['fetch_the_internet'],
-            output_file='internet.md'
+            config=self.agents_config['file_writter'],
+            tools=[FileWriterTool()],
+            llm=self.llm
 
         )
 
     @task
-    def master_subject_task(self) -> Task:
+    def retreive_content_task(self) -> Task:
         return Task(
-            config=self.tasks_config['master_subject'],
-            output_file='master.md'
-
+            config=self.tasks_config['retreive_content_task'],
         )
-        
-    @task
-    def front_mastering_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['front_mastering'],
-            output_file='ui.md'
 
-        )
-        
     @task
-    def harmonize_content_task(self) -> Task:
+    def web_scrap_task(self) -> Task:
         return Task(
-            config=self.tasks_config['harmonize_content'],
-            output_file='enhanced.md'
+            config=self.tasks_config['web_scrap_task'],
+        )
 
-        )
-        
     @task
-    def scribbling_task(self) -> Task:
+    def write_web_content_task(self) -> Task:
         return Task(
-            config=self.tasks_config['scribbling'],
-            output_file='final.md'
-    )
+            config=self.tasks_config['write_web_content_task'],
+        )
+
+    @task
+    def write_file_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['write_file_task'],
+        )
 
     @crew
     def crew(self) -> Crew:

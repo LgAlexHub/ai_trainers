@@ -1,49 +1,36 @@
-fetch_the_internet:
+retreive_content_task:
   description: >
-    Effectuez une recherche approfondie sur le {topic}
+    Effectuez une recherche approfondie et complete sur le {topic}
     Assurez vous de trouver toute information intéressante et pertinente sur
     l année en cours est {current_year}
   expected_output: >
-    Des fichiers markdown un par notion regroupable en dossier thematique avec en prefix de nom de fichier enhanced_
-    Formatted as markdown without '```'
+    Une list des 10 sites avec les informations les plus pertinente sur {topic}
   agent: web_retreiver
 
-master_subject:
+web_scrap_task:
   description: >
-    Avec le contenu a ta disposition ecris plan de formation et contenu de cours
-    avec les logiciels les livrables les exercices pour chaque niveau
-    les projets
+    Scrap les sites web avec les informations les plus recentes et pertinentes
   expected_output: >
-    Des fichiers markdown un par notion regroupable en dossier thematique
-    Formatted as markdown without '```'
-  agent: subject_matter_expert
+    Sites scrappes avec toutes les informations les plus importante
+  context: [retreive_content_task]
+  agent: web_scrapper
 
-front_mastering:
+write_web_content_task:
   description: >
-    Avec le contenu a ta disposition ecris plan de formation et contenu de cours
-    avec les logiciels les livrables les exercices pour chaque niveau
-    les projets
+    Ecrit les informations de maniere clair et pertinente dans un fichier
   expected_output: >
-    Des fichiers markdown un par notion regroupable en dossier thematique
-    Formatted as markdown without '```'
-  agent: graphist_ux_designer
+    Toutes le contenu en accord avec le topic chacun avec une section d information.
+    Fichier markdown formate en markdown sans '```'
+  context: [web_scrap_task]
 
-harmonize_content:
-  description: >
-    Avec le contenu a ta disposition ecris un plan de formation et contenu de cours
-    avec les logiciels les livrables les exercices pour chaque niveau
-    les projets en te basant sur tout les contenu ecris par les agents precedent
-    Tu dois produire un contenu harmonise pour que le public cible de {topic}
-    progresse efficacement
-  expected_output: >
-    Des fichiers markdown un par notion regroupable en dossier thematique avec en prefix de nom de fichier enhanced_
-    Formatted as markdown without '```'
-  agent: insturctionnal_designer
+  agent: web_content_writter
 
-scribbling:
+write_file_task:
   description: >
-    Avec le contenu a ta disposition ecris le contenu final
+    Ecrit le contenu informatif et pedagogique dans un ou plusieurs fichiers
   expected_output: >
-    Des fichiers markdown un par notion regroupable en dossier thematique avec en prefix de nom de fichier final_
-    Formatted as markdown without '```'
-  agent: content_writter
+    Un ou plusieurs fichiers markdown un par notion regroupable en dossier thematique avec en prefix de nom de fichier report_2025.md
+    Fichier markdown formate en markdown sans '```'
+  context: [write_web_content_task]
+
+  agent: file_writter
