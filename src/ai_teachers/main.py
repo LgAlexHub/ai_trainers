@@ -18,7 +18,7 @@ def run():
     Run the crew.
     """
     inputs = {
-        'topic': 'PLAN DE FORMATION RNCP 37674 Developpeur Web Web Mobile',
+        'topic': 'Fomration diplomante RNCP 37674 Developpeur Web Web Mobile',
         'current_year': str(datetime.now().year)
     }
     

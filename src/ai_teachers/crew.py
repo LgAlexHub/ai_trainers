@@ -27,7 +27,7 @@ class AiTeachers():
     agents: List[BaseAgent]
     tasks: List[Task]
     llm = LLM(
-        model='ollama/deepseek-r1:8b',
+        model='ollama/llama3.2:3b',
         # model='ollama/llama3.2:3b',
         base_url='http://127.0.0.1:11434'
     )
@@ -45,7 +45,16 @@ class AiTeachers():
     def web_scrapper(self) -> Agent:
         return Agent(
             config=self.agents_config['web_scrapper'],
-            tools=[ScrapeWebsiteTool()],
+            tools=[
+                ScrapeWebsiteTool(
+                    website_url=None,  # Dynamique
+                    bypass_ssl=False,
+                    headers={
+                        "User-Agent": "Mozilla/5.0 (compatible; CrewAI/1.0; +https://crewai.com)"
+                    }
+                ),
+                FileWriterTool(),
+            ],
             verbose=True,
             llm=self.llm
         )
@@ -78,18 +87,22 @@ class AiTeachers():
     def web_scrap_task(self) -> Task:
         return Task(
             config=self.tasks_config['web_scrap_task'],
+            context=[self.retreive_content_task()]
         )
 
     @task
     def write_web_content_task(self) -> Task:
         return Task(
             config=self.tasks_config['write_web_content_task'],
+            context=[self.web_scrap_task()]
         )
 
     @task
     def write_file_task(self) -> Task:
         return Task(
             config=self.tasks_config['write_file_task'],
+            context=[self.write_web_content_task()]
+
         )
 
     @crew

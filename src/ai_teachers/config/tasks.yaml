@@ -1,17 +1,20 @@
 retreive_content_task:
   description: >
-    Effectuez une recherche approfondie et complete sur le {topic}
-    Assurez vous de trouver toute information intéressante et pertinente sur
-    l année en cours est {current_year}
+    Effectuez une recherche approfondie et complete sur le {topic} et liste les listes avec des informations interessantes
   expected_output: >
-    Une list des 10 sites avec les informations les plus pertinente sur {topic}
+    Liste de 10 URLs au format Markdown :
+      - [Nom du site 1](https://url1.com)
+      - [Nom du site 2](https://url2.com) {topic}
   agent: web_retreiver
 
 web_scrap_task:
   description: >
-    Scrap les sites web avec les informations les plus recentes et pertinentes
+    Scrappe CHAQUE URL de la liste fournie dans context
+    Utilise l'outil ScrapeWebsiteTool pour chaque URL avec une profondeur de 1 lien
+    Utilise l'outil FileWriterTool pour ecrire un fichier dont tu choisira le nom au path suivant
+    C:\Users\alexl\Documents\4_CODE\7_PYTHON\crew\ai_teachers\output
   expected_output: >
-    Sites scrappes avec toutes les informations les plus importante
+    JSON mappes des sites scrappes avec toutes les informations les plus importante, tu choisiras le format
   context: [retreive_content_task]
   agent: web_scrapper
 
@@ -22,7 +25,6 @@ write_web_content_task:
     Toutes le contenu en accord avec le topic chacun avec une section d information.
     Fichier markdown formate en markdown sans '```'
   context: [web_scrap_task]
-
   agent: web_content_writter
 
 write_file_task:
